@@ -1,13 +1,14 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import serverless from "serverless-http";
 
 dotenv.config();
+
 const app = express();
 app.use(express.json());
 
-
-app.post("/PortfolioConnectMail", async (req, res) => {
+app.post("/api/PortfolioConnectMail", async (req, res) => {
   try {
     const { Name, EmailId, Mobile, Message } = req.body;
 
@@ -19,59 +20,25 @@ app.post("/PortfolioConnectMail", async (req, res) => {
       },
     });
 
-    // 🧩 HTML Email Template (converted from your C# StringBuilder)
     const htmlBody = `
-      <head>
-        <title></title>
-      </head>
       <body style="font-size: 10pt; font-family: Calibri;">
         <table width="100%" cellspacing="0" cellpadding="0" 
           style="border:1px solid #4c7a5d; border-radius:20px; background-color:#7655a573;">
-          <tbody style="font-size: 12pt; font-family: Calibri;">
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr>
-              <td colspan="2" style="padding-left:10px; font-size:15px;">
-                <strong>${Name}</strong> wants to connect with you.
-              </td>
-            </tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr>
-              <td align="left" colspan="2">
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="font-family: Calibri; font-size: 12px; color:black; border-collapse:collapse;">
-                  <tr>
-                    <td colspan="2" style="padding-left:10px; font-size:15px;">
-                      <strong>Email:</strong> ${EmailId}
-                    </td>
-                  </tr>
-                  <tr><td colspan="2" style="padding-left:10px;"><br/></td></tr>
-                  <tr>
-                    <td colspan="2" style="padding-left:10px; font-size:15px;">
-                      <strong>Mobile:</strong> ${Mobile}
-                    </td>
-                  </tr>
-                  <tr><td colspan="2" style="padding-left:10px;"><br/></td></tr>
-                  <tr>
-                    <td colspan="2" style="padding-left:10px; font-size:15px;">
-                      ${Message}
-                    </td>
-                  </tr>
-                  <tr><td colspan="2" style="padding-left:10px;"><br/></td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr><td>&nbsp;</td></tr>
+          <tbody>
+            <tr><td style="padding-left:10px; font-size:15px;">
+              <strong>${Name}</strong> wants to connect with you.<br/>
+              <strong>Email:</strong> ${EmailId}<br/>
+              <strong>Mobile:</strong> ${Mobile}<br/>
+              ${Message}
+            </td></tr>
           </tbody>
         </table>
-        <br><br>
       </body>
     `;
- 
-    // 📨 Send the email
+
     const info = await transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
-      to: `${EmailId}`, // Send to yourself or admin
+      to: process.env.EMAIL_USER, // send to yourself, not the user
       subject: `${Name} wants to connect with you.`,
       html: htmlBody,
     });
@@ -83,4 +50,5 @@ app.post("/PortfolioConnectMail", async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("✅ Mail API running on port 5000"));
+// ✅ Export for Vercel
+export const handler = serverless(app);
